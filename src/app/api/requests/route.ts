@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // ----------------------------------------------------
 // Google Sheets Configuration
 // ----------------------------------------------------
@@ -37,16 +40,18 @@ export async function GET() {
 
         const rows = response.data.values || [];
 
-        // تحويل الصفوف إلى شكل نقدر نفهمه في لوحة التحكم
-        const requests = rows.map((row) => ({
-            id: row[0] || '',
-            name: row[1] || '',
-            phone: row[2] || '',
-            type: row[3] || '',
-            details: row[4] || '',
-            date: row[5] || '',
-            status: row[6] || 'pending',
-        }));
+        // تحويل الصفوف إلى شكل نقدر نفهمه في لوحة التحكم وتجاهل الصفوف الفارغة بالكامل
+        const requests = rows
+            .filter(row => row && row.length > 0 && row[0]) // التأكد من وجود ID على الأقل
+            .map((row) => ({
+                id: row[0] || '',
+                name: row[1] || 'بدون اسم',
+                phone: row[2] || '',
+                type: row[3] || 'other',
+                details: row[4] || '',
+                date: row[5] || '',
+                status: row[6] || 'pending',
+            }));
 
         // الترتيب من الأحدث للأقدم
         requests.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
